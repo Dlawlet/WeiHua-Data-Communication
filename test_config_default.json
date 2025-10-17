@@ -1,0 +1,8 @@
+{
+  "timeout_seconds": 30,
+  "max_memory_mb": 512,
+  "max_cpu_percent": 25,
+  "input_file": "input_large_realiste.txt",
+  "output_file": null,
+  "check_interval": 0.1
+}

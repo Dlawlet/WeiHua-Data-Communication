@@ -1,0 +1,83 @@
+╔═══════════════════════════════════════════════════════════════╗
+║           UTILISATION RAPIDE - TESTS DE RESSOURCES            ║
+╚═══════════════════════════════════════════════════════════════╝
+
+⚠️  POUR LINUX: Voir USAGE_LINUX.txt pour limitations strictes ⚠️
+
+📋 INSTALLATION (une seule fois)
+────────────────────────────────────────────────────────────────
+pip install psutil
+
+# Linux uniquement - pour limitation CPU stricte (optionnel)
+sudo apt-get install cpulimit
+
+
+🚀 UTILISATION SIMPLE
+────────────────────────────────────────────────────────────────
+test.bat program.exe 10 512
+         │           │  └─ Mémoire max (MB)
+         │           └─ Timeout (secondes)
+         └─ Programme à tester
+
+
+🔧 UTILISATION AVANCÉE (Python CLI)
+────────────────────────────────────────────────────────────────
+# Test basique
+python scripts/resource_limiter.py program.exe -t 10 -m 512
+
+# Avec fichier d'entrée
+python scripts/resource_limiter.py solver.exe -i input.txt -t 15 -m 1024
+
+# Avec sauvegarde des résultats
+python scripts/resource_limiter.py program.exe -o results.json
+
+# Avec fichier de configuration
+python scripts/resource_limiter.py program.exe -c test_config_default.json
+
+
+⚙️ CONFIGURATIONS DISPONIBLES
+────────────────────────────────────────────────────────────────
+test_config_default.json  → 10s, 512MB  (standard) (max cpu at)
+
+
+📊 OPTIONS CLI
+────────────────────────────────────────────────────────────────
+-t, --timeout    Timeout en secondes
+-m, --memory     Mémoire max en MB
+-i, --input      Fichier d'entrée (stdin)
+-o, --output     Fichier de sortie JSON
+-c, --config     Fichier de configuration JSON
+
+
+💻 COMPILATION C++
+────────────────────────────────────────────────────────────────
+g++ -O3 -o program.exe program.cpp
+g++ -std=c++17 -O3 -march=native -o solver.exe submission.cpp
+
+
+📖 EXEMPLES
+────────────────────────────────────────────────────────────────
+g++ -O3 -o program.exe program.cpp
+
+# Test simple
+test.bat program.exe
+
+# Test avec limites strictes
+test.bat program.exe 5 256
+
+# Test avec config et entrée
+python scripts/resource_limiter.py program.exe -c test_config_default.json -i input.txt
+
+# Test avec output et calcul de score
+python scripts/resource_limiter.py program.exe -c test_config_default.json -i input.txt -O output.txt
+python compute_score.py input.txt output.txt
+
+# Linux: Script Bash natif pour limitations strictes
+./scripts/run_with_limits_linux.sh ./program input.txt output.txt 30 512 50
+
+
+✅ RÉSULTATS
+────────────────────────────────────────────────────────────────
+Success: True          → Test réussi
+Timeout: True          → Time Limit Exceeded (TLE)
+Memory Exceeded: True  → Memory Limit Exceeded (MLE)

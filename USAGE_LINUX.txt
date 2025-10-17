@@ -1,0 +1,122 @@
+╔═══════════════════════════════════════════════════════════════╗
+║           UTILISATION LINUX - LIMITATIONS STRICTES            ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📋 INSTALLATION LINUX
+────────────────────────────────────────────────────────────────
+# Dépendances Python
+pip install psutil
+
+# Pour limitation CPU stricte (optionnel mais recommandé)
+sudo apt-get install cpulimit     # Debian/Ubuntu
+sudo yum install cpulimit          # CentOS/RHEL
+sudo pacman -S cpulimit            # Arch Linux
+
+
+🚀 MÉTHODE 1: Script Python (multiplateforme)
+────────────────────────────────────────────────────────────────
+# Identique à Windows, détection automatique du système
+python scripts/resource_limiter.py ./program -c test_config_default.json -i input.txt -O output.txt
+
+# Le script applique automatiquement:
+# - Linux: nice (priorité CPU)
+# - Windows: IDLE/BELOW_NORMAL priority
+# - macOS: nice (comme Linux)
+
+
+🐧 MÉTHODE 2: Script Bash natif (Linux uniquement)
+────────────────────────────────────────────────────────────────
+# Rendre le script exécutable (une seule fois)
+chmod +x scripts/run_with_limits_linux.sh
+
+# Utilisation basique
+./scripts/run_with_limits_linux.sh ./program input.txt output.txt
+
+# Avec paramètres personnalisés
+./scripts/run_with_limits_linux.sh ./program input.txt output.txt 30 512 50
+                                    │       │          │          │  │   └─ CPU max (%)
+                                    │       │          │          │  └─ Mémoire max (MB)
+                                    │       │          │          └─ Timeout (s)
+                                    │       │          └─ Fichier de sortie
+                                    │       └─ Fichier d'entrée
+                                    └─ Programme
+
+
+🔧 AVANTAGES DU SCRIPT BASH LINUX
+────────────────────────────────────────────────────────────────
+✅ Utilise ulimit pour limites mémoire STRICTES
+✅ Utilise timeout pour limites temps STRICTES
+✅ Détecte et utilise cpulimit si disponible
+✅ Mesure précise du temps d'exécution
+✅ Codes de sortie clairs (0=succès, 124=timeout, 137=killed)
+
+
+⚙️ COMPARAISON DES MÉTHODES
+────────────────────────────────────────────────────────────────
+Caractéristique    │ Python Script  │ Bash Script (Linux)
+───────────────────┼────────────────┼─────────────────────────
+Multiplateforme    │ ✅ Oui         │ ❌ Linux uniquement
+Limite CPU stricte │ ⚠️  Soft       │ ✅ Stricte (avec cpulimit)
+Limite Mémoire     │ ✅ Stricte     │ ✅ Stricte (ulimit)
+Limite Timeout     │ ✅ Stricte     │ ✅ Stricte (timeout cmd)
+Monitoring détaillé│ ✅ Oui         │ ❌ Basique
+JSON results       │ ✅ Oui         │ ❌ Non
+
+
+📖 EXEMPLES LINUX
+────────────────────────────────────────────────────────────────
+# Compilation
+g++ -std=c++17 -O3 -march=native -o program program.cpp
+
+# Test avec Python (recommandé pour debug)
+python scripts/resource_limiter.py ./program -i input.txt -O output.txt -t 30 -m 512
+
+# Test avec Bash (recommandé pour production)
+./scripts/run_with_limits_linux.sh ./program input.txt output.txt 30 512 50
+
+# Test multiple fichiers
+for input in input_*.txt; do
+    output="output_${input#input_}"
+    ./scripts/run_with_limits_linux.sh ./program "$input" "$output" 60 1024 80
+done
+
+
+🔍 INSTALLATION CPULIMIT (recommandé)
+────────────────────────────────────────────────────────────────
+# Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install cpulimit
+
+# Vérifier l'installation
+cpulimit --help
+
+# Test manuel
+cpulimit -l 50 -p <PID>  # Limiter un processus à 50% CPU
+
+
+💡 NOTES IMPORTANTES
+────────────────────────────────────────────────────────────────
+1. ulimit limite la mémoire VIRTUELLE (RSS + SWAP)
+2. nice réduit la PRIORITÉ mais ne limite pas strictement
+3. cpulimit est le SEUL moyen de limiter strictement le CPU
+4. timeout tue le processus après le délai (SIGTERM puis SIGKILL)
+5. Les limites s'appliquent aussi aux processus enfants
+
+
+🐞 DEBUGGING
+────────────────────────────────────────────────────────────────
+# Voir les limites actuelles
+ulimit -a
+
+# Tester cpulimit manuellement
+./program < input.txt > output.txt &
+PID=$!
+cpulimit -p $PID -l 50
+
+# Vérifier l'utilisation CPU en temps réel
+top -p $PID
+
+
+✅ CALCUL DU SCORE (identique Windows/Linux)
+────────────────────────────────────────────────────────────────
+python compute_score.py input.txt output.txt
